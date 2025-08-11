@@ -1,0 +1,352 @@
+{
+  "info": {
+    "name": "MathDuo API (Complete)",
+    "_postman_id": "c6d3b1b4-6e2c-4a40-9c3d-8e6f1f23af00",
+    "description": "End-to-end tests for the Interactive Math Learning App, including idempotent submissions and adaptive practice.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "attempt_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adaptive_attempt_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Lessons",
+      "item": [
+        {
+          "name": "GET /api/lessons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/lessons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lessons"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Array body', () => Array.isArray(pm.response.json()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/lessons/1",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/lessons/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lessons",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Has problems[]', () => Array.isArray(j.problems));",
+                  "pm.collectionVariables.set('first_problem_id', j.problems?.[0]?.id || 0);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/lessons/1/submit \u2014 First submit (creates attempt)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('attempt_id')) {",
+                  "  pm.collectionVariables.set('attempt_id', pm.variables.replaceIn('{{$guid}}'));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Has xp fields', () => json && typeof json.total_xp === 'number' && typeof json.xp_gained === 'number');",
+                  "pm.collectionVariables.set('xp_after_first', json.total_xp);",
+                  "pm.collectionVariables.set('xp_gain_first', json.xp_gained);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/lessons/1/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lessons",
+                "1",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"attempt_id\": \"{{attempt_id}}\", \"answers\": [{\"problem_id\": 103, \"value\": \"45\"}, {\"problem_id\": 104, \"value\": \"23\"}]}"
+            }
+          }
+        },
+        {
+          "name": "POST /api/lessons/1/submit \u2014 Second submit (same attempt, idempotent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('total_xp unchanged', () => pm.expect(json.total_xp).to.eql(Number(pm.collectionVariables.get('xp_after_first'))));",
+                  "pm.test('xp_gained unchanged', () => pm.expect(json.xp_gained).to.eql(Number(pm.collectionVariables.get('xp_gain_first'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/lessons/1/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lessons",
+                "1",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"attempt_id\": \"{{attempt_id}}\", \"answers\": [{\"problem_id\": 103, \"value\": \"45\"}, {\"problem_id\": 104, \"value\": \"23\"}]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "GET /api/profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Has totals and streaks', () => typeof j.total_xp==='number' && typeof j.current_streak==='number');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Adaptive Practice",
+      "item": [
+        {
+          "name": "GET /api/practice/adaptive",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/practice/adaptive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "practice",
+                "adaptive"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Has problems[]', () => Array.isArray(j.problems));",
+                  "if (j.problems.length) pm.collectionVariables.set('adaptive_problem_id', j.problems[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/practice/submit \u2014 First submit",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('adaptive_attempt_id')) {",
+                  "  pm.collectionVariables.set('adaptive_attempt_id', pm.variables.replaceIn('{{$guid}}'));",
+                  "}",
+                  "if (!pm.collectionVariables.get('adaptive_problem_id')) {",
+                  "  pm.collectionVariables.set('adaptive_problem_id', 103);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Results array', () => Array.isArray(j.results));",
+                  "pm.collectionVariables.set('adaptive_xp_after_first', j.total_xp);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/practice/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "practice",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"attempt_id\": \"{{adaptive_attempt_id}}\", \"answers\": [{\"problem_id\": \"{{adaptive_problem_id}}\", \"value\": \"45\"}]}"
+            }
+          }
+        },
+        {
+          "name": "POST /api/practice/submit \u2014 Second submit (same attempt, idempotent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Idempotent total_xp', () => pm.expect(j.total_xp).to.eql(Number(pm.collectionVariables.get('adaptive_xp_after_first'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/practice/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "practice",
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"attempt_id\": \"{{adaptive_attempt_id}}\", \"answers\": [{\"problem_id\": \"{{adaptive_problem_id}}\", \"value\": \"45\"}]}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
