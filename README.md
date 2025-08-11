@@ -1,4 +1,4 @@
-# MathDuo - Tech Lead Take‑Home
+# MathDuo Project
 ### Bambang Nursandi Aug 2025
 
 This document maps the delivered solution to the brief, point by point, and lists time spent, trade‑offs, and what was intentionally not built within the time box.
@@ -186,7 +186,7 @@ curl -X POST http://localhost:3000/api/lessons/1/submit   -H "Content-Type: appl
 
 ---
 
-## Tech Lead Focus Areas
+
 
 ### 1) Team Development Strategy
 
